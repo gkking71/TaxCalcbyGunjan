@@ -280,6 +280,8 @@
             border: 1px solid rgba(6,182,212,0.2); border-radius: var(--radius-sm); text-align: center;
         }
         .comparison-text { font-weight: 600; font-size: 0.85rem; color: #22d3ee; }
+        .result-stamp { margin-top: 1rem; text-align: center; font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.03em; }
+        .result-stamp .stamp-name { color: #a5b4fc; font-weight: 700; }
 
         /* === ATTRIBUTION === */
         .attribution {
@@ -328,6 +330,14 @@
         /* === ANIMATIONS === */
         .fade-up { opacity: 0; transform: translateY(24px); transition: opacity 0.7s, transform 0.7s; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
+        /* Safety net: if JS fails to load/run for any reason, content must never stay invisible */
+        .js-fallback .fade-up { opacity: 1; transform: translateY(0); }
+
+        /* === UTILITY: HIDE/SHOW (drives income-head tab switching) === */
+        .hidden { display: none !important; }
+
+        /* === 3D TILT INTERACTION (AI / 3D feel) === */
+        .dash-card, .slab-card, .surcharge-card { transform-style: preserve-3d; will-change: transform; transition: transform 0.15s ease-out, box-shadow 0.15s ease-out; }
 
         /* === RESPONSIVE === */
         @media (max-width: 1200px) { .calc-main { grid-template-columns: 1fr 380px; } }
@@ -632,6 +642,7 @@
                     </div>
                 </div>
                 <div class="comparison-box" id="compBox" style="display:none"><div class="comparison-text" id="compText"></div></div>
+                <div class="result-stamp" id="resultStamp"></div>
             </div>
         </div>
 
@@ -687,6 +698,7 @@
     <footer class="footer">
         <p class="footer-text">Data sourced from <span class="footer-highlight">Income Tax Department, Government of India</span> | FY 2025-26 (AY 2026-27) | Finance Act 2025</p>
         <p class="footer-text" style="margin-top:0.5rem;">This calculator is for informational purposes only. Please consult a qualified tax professional for accurate advice.</p>
+        <p class="footer-text" style="margin-top:0.75rem;">© <span id="footerYear"></span> <span class="footer-highlight">Gunjan</span> — All Rights Reserved. This tool, its design and source code are the original work of Gunjan.</p>
     </footer>
 
     <script>
@@ -853,10 +865,22 @@
         const normalTaxable = Math.max(0, taxableIncome - specialIncome);
         const normalTax = regime==='new' ? slabTaxNew(normalTaxable) : slabTaxOld(normalTaxable);
 
-        // Rebate 87A
+        // Rebate 87A (with marginal relief just above the threshold, per Finance Act provisions)
         let rebate = 0;
-        if(regime==='new') { if(taxableIncome<=1200000) rebate = Math.min(normalTax+specialTax, 60000); }
-        else { if(taxableIncome<=500000) rebate = Math.min(normalTax+specialTax, 12500); }
+        const taxBeforeRebate = normalTax + specialTax;
+        if(regime==='new') {
+            if(taxableIncome<=1200000) {
+                rebate = Math.min(taxBeforeRebate, 60000);
+            } else if(taxableIncome<=1300000) {
+                // Marginal relief: tax payable can't exceed income above ₹12L
+                const excessIncome = taxableIncome - 1200000;
+                rebate = Math.max(0, taxBeforeRebate - excessIncome);
+            }
+        } else {
+            if(taxableIncome<=500000) {
+                rebate = Math.min(taxBeforeRebate, 12500);
+            }
+        }
 
         const taxAfterRebate = Math.max(0, normalTax + specialTax - rebate);
         const totalIncome = grossTotal; // For surcharge threshold
@@ -926,32 +950,73 @@
             else if(totalOld<totalNew) { compText.textContent='✅ Old Regime saves you '+fmtN(totalNew-totalOld)+'!'; compText.style.color='#fbbf24'; }
             else { compText.textContent='⚖️ Both regimes result in same tax!'; compText.style.color='#a5b4fc'; }
         } else { compBox.style.display='none'; }
+
+        // Authorship stamp — shown after every calculation
+        const stamp = document.getElementById('resultStamp');
+        if(stamp) {
+            const now = new Date();
+            stamp.innerHTML = '⚡ Computed by <span class="stamp-name">Gunjan\'s AI Tax Calculator</span> &middot; ' + now.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+        }
     }
 
     // ============================
     // INIT
     // ============================
     document.addEventListener('DOMContentLoaded', () => {
-        // Particles
-        const pc = document.getElementById('particles');
-        for(let i=0;i<25;i++){
-            const p = document.createElement('div');
-            p.className='particle';
-            p.style.left=Math.random()*100+'%';
-            p.style.animationDelay=Math.random()*15+'s';
-            p.style.animationDuration=(Math.random()*15+10)+'s';
-            pc.appendChild(p);
-        }
-        // Navbar scroll
-        window.addEventListener('scroll',()=>{ document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>50); });
-        // Observer
-        const obs = new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }); },{threshold:0.1});
-        document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+        try {
+            // Particles
+            const pc = document.getElementById('particles');
+            for(let i=0;i<25;i++){
+                const p = document.createElement('div');
+                p.className='particle';
+                p.style.left=Math.random()*100+'%';
+                p.style.animationDelay=Math.random()*15+'s';
+                p.style.animationDuration=(Math.random()*15+10)+'s';
+                pc.appendChild(p);
+            }
+        } catch(e) { console.warn('Particles init skipped:', e); }
+
+        try {
+            // Navbar scroll
+            window.addEventListener('scroll',()=>{ document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>50); });
+        } catch(e) { console.warn('Navbar scroll skipped:', e); }
+
+        try {
+            // Reveal-on-scroll. Wrapped in try/catch + a hard timeout fallback below,
+            // so a missing IntersectionObserver (old browsers) can never leave content invisible.
+            if ('IntersectionObserver' in window) {
+                const obs = new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }); },{threshold:0.1});
+                document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+            } else {
+                document.documentElement.classList.add('js-fallback');
+            }
+        } catch(e) { document.documentElement.classList.add('js-fallback'); }
+
+        try {
+            // 3D tilt micro-interaction on key cards
+            document.querySelectorAll('.dash-card, .slab-card, .surcharge-card').forEach(card=>{
+                card.addEventListener('mousemove', (ev)=>{
+                    const r = card.getBoundingClientRect();
+                    const x = (ev.clientX - r.left)/r.width - 0.5;
+                    const y = (ev.clientY - r.top)/r.height - 0.5;
+                    card.style.transform = `perspective(700px) rotateY(${x*8}deg) rotateX(${-y*8}deg) translateY(-3px)`;
+                });
+                card.addEventListener('mouseleave', ()=>{ card.style.transform = ''; });
+            });
+        } catch(e) { console.warn('3D tilt skipped:', e); }
+
         // Open sections
-        document.getElementById('colDeductions').classList.add('open');
-        document.getElementById('colTDS').classList.add('open');
+        document.getElementById('colDeductions')?.classList.add('open');
+        document.getElementById('colTDS')?.classList.add('open');
+
+        // Hard safety net: no matter what happens above, make sure the page is visible.
+        setTimeout(()=>{ document.documentElement.classList.add('js-fallback'); }, 1200);
+
+        const fy = document.getElementById('footerYear');
+        if(fy) fy.textContent = new Date().getFullYear();
+
         // Initial calc
-        selectRegime('new');
+        try { selectRegime('new'); } catch(e) { console.error('Initial calculation failed:', e); }
     });
     </script>
 </body>
