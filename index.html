@@ -361,6 +361,73 @@
             .summary-dash { grid-template-columns: 1fr 1fr; }
             .dash-card:last-child { grid-column: span 2; }
         }
+
+        /* === AI QUESTION SOLVER === */
+        .ai-solver {
+            background: var(--bg-card); border: 1px solid rgba(99,102,241,0.25); border-radius: var(--radius);
+            padding: 1.75rem; margin-bottom: 2.5rem; backdrop-filter: blur(16px); position: relative; overflow: hidden;
+        }
+        .ai-solver::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent-3), var(--accent-2), var(--accent-7));
+        }
+        .ai-solver-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; justify-content: space-between; }
+        .ai-solver-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; }
+        .ai-solver-badge {
+            font-size: 0.65rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 50px;
+            background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3);
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .ai-solver-sub { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.1rem; line-height: 1.6; }
+        .ai-textarea {
+            width: 100%; min-height: 140px; resize: vertical; padding: 1rem; background: rgba(255,255,255,0.04);
+            border: 1.5px solid rgba(99,102,241,0.18); border-radius: var(--radius-sm); color: var(--text-primary);
+            font-size: 0.9rem; font-family: 'Inter', sans-serif; line-height: 1.55; transition: all 0.3s;
+        }
+        .ai-textarea:focus { outline: none; border-color: var(--accent-3); box-shadow: 0 0 0 3px rgba(6,182,212,0.12); }
+        .ai-textarea::placeholder { color: var(--text-muted); }
+        .ai-solver-actions { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+        .ai-btn {
+            padding: 0.85rem 1.75rem; background: linear-gradient(135deg, var(--accent-3), var(--accent-1), var(--accent-7));
+            background-size: 200% 200%; border: none; border-radius: var(--radius-sm); color: white;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.3s;
+            flex: 1; min-width: 180px;
+        }
+        .ai-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(6,182,212,0.35); background-position: 100% 0; }
+        .ai-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .ai-btn-clear {
+            padding: 0.85rem 1.25rem; background: rgba(255,255,255,0.04); border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; font-family: inherit; transition: all 0.3s;
+        }
+        .ai-btn-clear:hover { color: var(--text-primary); border-color: rgba(99,102,241,0.35); }
+        .ai-status { font-size: 0.78rem; color: var(--accent-3); margin-top: 0.75rem; display: none; align-items: center; gap: 0.5rem; }
+        .ai-status.show { display: flex; }
+        .ai-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-3); animation: pulse 1.2s infinite; }
+        .ai-output-wrap { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem; display: none; }
+        .ai-output-wrap.show { display: block; }
+        .ai-output {
+            font-size: 0.88rem; line-height: 1.75; color: var(--text-primary);
+        }
+        .ai-output h1, .ai-output h2, .ai-output h3, .ai-output h4 {
+            color: #a5b4fc; margin: 1.2rem 0 0.6rem; font-weight: 700;
+        }
+        .ai-output h4 { font-size: 0.95rem; }
+        .ai-output h3 { font-size: 1.05rem; }
+        .ai-output p { margin-bottom: 0.6rem; }
+        .ai-output strong { color: #34d399; font-weight: 700; }
+        .ai-output ul, .ai-output ol { margin: 0.5rem 0 0.8rem 1.4rem; }
+        .ai-output li { margin-bottom: 0.3rem; }
+        .ai-output table { width: 100%; border-collapse: collapse; margin: 0.75rem 0 1.25rem; font-size: 0.85rem; }
+        .ai-output th, .ai-output td {
+            border: 1px solid var(--border); padding: 0.55rem 0.75rem; text-align: left;
+        }
+        .ai-output th { background: rgba(99,102,241,0.1); color: #a5b4fc; font-weight: 700; }
+        .ai-output td { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); }
+        .ai-output td:first-child { font-family: 'Inter', sans-serif; color: var(--text-primary); }
+        .ai-output hr { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+        .ai-error { color: #f87171; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); padding: 0.9rem 1.1rem; border-radius: var(--radius-sm); font-size: 0.85rem; }
+        .ai-disclaimer { margin-top: 1.25rem; font-size: 0.7rem; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 0.9rem; }
     </style>
 </head>
 <body>
@@ -390,6 +457,30 @@
             <h1>Complete Income Tax<br>Calculator</h1>
             <p>Calculate tax under all 5 heads of income with automatic deductions, rebate u/s 87A, surcharge &amp; cess. Compare New vs Old regime instantly.</p>
         </section>
+
+        <!-- AI QUESTION SOLVER -->
+        <div class="ai-solver fade-up">
+            <div class="ai-solver-head">
+                <div class="ai-solver-title">🤖 Paste Any Tax Question — AI Solves It</div>
+                <div class="ai-solver-badge">Income-tax Act 1961 aware</div>
+            </div>
+            <div class="ai-solver-sub">
+                Paste a full question, an exam-style problem with sub-parts (a, b, c...), or a pure conceptual query —
+                computation of total income/tax under new or old regime, clubbing of income, set-off &amp; carry forward
+                of losses, deductions under Chapter VI-A, residential status, capital gains, house property, salary
+                perquisites, or general tax advice. The AI reads it, identifies what's asked, and answers each part.
+            </div>
+            <textarea class="ai-textarea" id="aiQuestionInput" placeholder="Paste your question here... e.g. 'Lalit, a resident individual, aged 54 years, is engaged in the business of manufacturing clothes. He earned profit of ₹82,50,000 as per profit and loss account... Compute the Total Income of Lalit for the assessment year 2026-27, assuming default tax regime under section 115BAC.'"></textarea>
+            <div class="ai-solver-actions">
+                <button class="ai-btn" id="aiSolveBtn" onclick="solveAIQuestion()">✨ Analyze &amp; Solve</button>
+                <button class="ai-btn-clear" onclick="clearAIQuestion()">Clear</button>
+            </div>
+            <div class="ai-status" id="aiStatus"><span class="ai-dot"></span> <span id="aiStatusText">Reading question and applying Income-tax Act, 1961 provisions...</span></div>
+            <div class="ai-output-wrap" id="aiOutputWrap">
+                <div class="ai-output" id="aiOutput"></div>
+                <div class="ai-disclaimer">AI-generated answer for study/reference purposes — based on provisions of the Income-tax Act, 1961 as applicable for AY 2026-27. Verify with a qualified CA / the latest Finance Act before relying on it for actual filing.</div>
+            </div>
+        </div>
 
         <!-- INCOME HEAD TABS -->
         <div class="head-tabs fade-up" id="headTabs">
@@ -1252,6 +1343,169 @@
         // Initial calc
         try { selectRegime('new'); } catch(e) { console.error('Initial calculation failed:', e); }
     });
+    // ============================
+    // AI QUESTION SOLVER
+    // ============================
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // Minimal markdown -> HTML renderer (headings, bold, lists, tables, hr, paragraphs)
+    function renderMarkdownLite(md) {
+        const lines = md.replace(/\r\n/g,'\n').split('\n');
+        let html = ''; let inList = false; let listTag = '';
+        let i = 0;
+        while (i < lines.length) {
+            let line = lines[i];
+
+            // Table block
+            if (/^\s*\|.*\|\s*$/.test(line)) {
+                let tableLines = [];
+                while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { tableLines.push(lines[i]); i++; }
+                if (inList) { html += `</${listTag}>`; inList = false; }
+                const rows = tableLines.map(l => l.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim()));
+                const isSep = r => r.every(c => /^:?-{2,}:?$/.test(c));
+                let header = null, bodyRows = rows;
+                if (rows.length > 1 && isSep(rows[1])) { header = rows[0]; bodyRows = rows.slice(2); }
+                html += '<table>';
+                if (header) html += '<thead><tr>' + header.map(c=>`<th>${inlineMD(c)}</th>`).join('') + '</tr></thead>';
+                html += '<tbody>' + bodyRows.map(r => '<tr>' + r.map(c=>`<td>${inlineMD(c)}</td>`).join('') + '</tr>').join('') + '</tbody>';
+                html += '</table>';
+                continue;
+            }
+
+            // Headings
+            let h = line.match(/^(#{1,4})\s+(.*)$/);
+            if (h) {
+                if (inList) { html += `</${listTag}>`; inList = false; }
+                const level = Math.min(h[1].length + 2, 4);
+                html += `<h${level}>${inlineMD(h[2])}</h${level}>`;
+                i++; continue;
+            }
+
+            // Horizontal rule
+            if (/^\s*(---|\*\*\*)\s*$/.test(line)) {
+                if (inList) { html += `</${listTag}>`; inList = false; }
+                html += '<hr>'; i++; continue;
+            }
+
+            // List items
+            let ol = line.match(/^\s*(\d+[\.\)]|\([a-zA-Z ivx]+\))\s+(.*)$/);
+            let ul = line.match(/^\s*[-*]\s+(.*)$/);
+            if (ol || ul) {
+                const tag = ol ? 'ol' : 'ul';
+                if (!inList || listTag !== tag) {
+                    if (inList) html += `</${listTag}>`;
+                    html += `<${tag}>`; inList = true; listTag = tag;
+                }
+                html += `<li>${inlineMD(ol ? ol[2] : ul[1])}</li>`;
+                i++; continue;
+            }
+
+            // Blank line
+            if (/^\s*$/.test(line)) {
+                if (inList) { html += `</${listTag}>`; inList = false; }
+                i++; continue;
+            }
+
+            // Paragraph
+            if (inList) { html += `</${listTag}>`; inList = false; }
+            html += `<p>${inlineMD(line)}</p>`;
+            i++;
+        }
+        if (inList) html += `</${listTag}>`;
+        return html;
+    }
+
+    function inlineMD(text) {
+        let t = escapeHtml(text);
+        t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        t = t.replace(/`(.+?)`/g, '<code>$1</code>');
+        return t;
+    }
+
+    function clearAIQuestion() {
+        document.getElementById('aiQuestionInput').value = '';
+        document.getElementById('aiOutputWrap').classList.remove('show');
+        document.getElementById('aiOutput').innerHTML = '';
+    }
+
+    async function solveAIQuestion() {
+        const input = document.getElementById('aiQuestionInput').value.trim();
+        const btn = document.getElementById('aiSolveBtn');
+        const status = document.getElementById('aiStatus');
+        const outputWrap = document.getElementById('aiOutputWrap');
+        const output = document.getElementById('aiOutput');
+
+        if (!input) {
+            outputWrap.classList.add('show');
+            output.innerHTML = '<div class="ai-error">Paste a question first — e.g. a computation problem, or a query on clubbing of income, set-off &amp; carry forward of losses, deductions, residential status, etc.</div>';
+            return;
+        }
+
+        btn.disabled = true;
+        status.classList.add('show');
+        outputWrap.classList.remove('show');
+
+        const systemPrompt = `You are an expert Indian Chartered Accountant and Income-tax Act, 1961 specialist, solving CA/CS/CMA-style direct tax problems for Assessment Year 2026-27 (Financial Year 2025-26).
+
+Behaviour rules:
+1. First silently identify: (a) whether the pasted text is a numerical computation question (income/tax computation under any head, GTI, deductions, set-off/carry-forward, capital gains, etc.) or (b) a conceptual/advisory question (clubbing of income, residuary provisions, residential status rules, taxability concepts, regime advice) or (c) a mix with sub-parts (a), (b), (c)...
+2. If the question has multiple sub-parts, answer EACH part separately under its own clear sub-heading, in the same order as asked, preserving labels like (a)/(b)/(c) or (i)/(ii).
+3. For numerical questions: show particulars in a compact markdown table (Particulars | Amount), apply correct treatment under New Regime u/s 115BAC (default) or Old Regime as specified in the question, state which deductions/exemptions are allowed or disallowed under that regime, compute Gross Total Income, deductions, Total/Taxable Income, tax as per slab, rebate u/s 87A, surcharge, health & education cess @4%, and final tax payable/refund. End with a one-line bold final answer.
+4. For conceptual/advisory questions (clubbing of income u/s 60-64, set-off & carry-forward u/s 70-80, residential status u/s 6, exemptions, deductions, etc.): give the applicable section, the rule in your own words, and apply it directly to the facts given, with a clear concluding answer.
+5. Be precise, exam-ready, and CONCISE — use tables and short bullet points instead of long prose. No generic disclaimers, no restating the question, no filler like "I'd be happy to help". Go straight into the answer.
+6. Use ₹ for amounts, round to the nearest rupee, and use standard Indian numbering (lakhs/crores) where natural.
+7. If the question is ambiguous or missing a fact needed for computation, state a reasonable, clearly-labelled assumption and proceed — never refuse and never just ask a clarifying question without attempting the answer.
+8. Output valid markdown only (headings with ###, tables with | pipes, **bold** for key figures/final answers). Do not wrap output in code fences.`;
+
+        try {
+            let apiKey = localStorage.getItem('openrouter_api_key');
+            if (!apiKey) {
+                apiKey = prompt('Enter your OpenRouter API key (stored only in this browser):');
+                if (!apiKey) { throw new Error('No API key provided'); }
+                localStorage.setItem('openrouter_api_key', apiKey);
+            }
+
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + apiKey
+                },
+                body: JSON.stringify({
+                    model: "meta-llama/llama-3.3-70b-instruct:free",
+                    max_tokens: 1000,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: input }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('API request failed with status ' + response.status);
+            }
+
+            const data = await response.json();
+            const answer = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '').trim();
+
+            if (!answer) {
+                output.innerHTML = '<div class="ai-error">No answer was generated. Please try rephrasing the question or check your network settings.</div>';
+            } else {
+                output.innerHTML = renderMarkdownLite(answer);
+            }
+            outputWrap.classList.add('show');
+            outputWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (err) {
+            console.error('AI solve error:', err);
+            output.innerHTML = '<div class="ai-error">Could not reach the AI service (' + escapeHtml(err.message) + '). Please check your connection and try again.</div>';
+            outputWrap.classList.add('show');
+        } finally {
+            btn.disabled = false;
+            status.classList.remove('show');
+        }
+    }
     </script>
 </body>
 </html>
